@@ -29,7 +29,8 @@
 			"type": "node",
 			"request": "launch",
 			"name": "Run File",
-			"program": "${file}"
+            "program": "${file}",
+            "console": "integratedTerminal"
 		}
 	]
 }

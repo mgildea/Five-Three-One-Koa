@@ -82,3 +82,4 @@ typings/
 
 #project
 src/server/credentials.json
+token.json

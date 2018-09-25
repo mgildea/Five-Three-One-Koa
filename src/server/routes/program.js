@@ -1,7 +1,8 @@
 const Router = require('koa-router');
 const router = new Router();
 
-const builder = require('../utils/builder');
+const template = require('../utils/templateBuilder');
+const spreadsheet = require('../utils/spreadsheetBuilder');
 
 
 router.get('/', async (ctx) => {
@@ -16,9 +17,15 @@ router
 })
 .get('/template/:days', async (ctx) => {
 
-    ctx.body = builder(ctx.days);
+    ctx.body = template(ctx.days)
     ctx.status = 200;
-});
+})
+.post('/program/:days', async (ctx) => {
+
+    ctx.body = await spreadsheet(template(ctx.days));
+    ctx.status = 200;
+})
+
 
 
 module.exports = router;
