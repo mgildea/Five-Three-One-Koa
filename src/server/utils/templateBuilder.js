@@ -10,7 +10,7 @@ const MovementSet = (mvmt, outline) => {
 };
 
 
-const buildProgramTemplate = (daysPerWeek = 4, movements = ["bs", "sp", "fs", "dl", "ohs", "pp"]) => {
+const buildProgramTemplate = (daysPerWeek = 4, movements = ["Back Squat", "Strict Press", "Front Squat", "Deadlift", "Overhead Squat", "Push Press"]) => {
 	const outline = [
 		[SetOutline(0.58, 5), SetOutline(0.67, 5), SetOutline(0.76, 5)],
 		[SetOutline(0.63, 3), SetOutline(0.72, 3), SetOutline(0.81, 3)],
@@ -28,8 +28,10 @@ const buildProgramTemplate = (daysPerWeek = 4, movements = ["bs", "sp", "fs", "d
 	outline.forEach((cycle) => {
 		days = days.concat(
 			movements.map((mvmt) => {
-				return { sets : cycle.map((set) => {
-					return MovementSet(mvmt, set);
+				return {
+					movement : mvmt, 
+					sets : cycle.map((set) => {
+					return set;
 				})};
 			})
 		);

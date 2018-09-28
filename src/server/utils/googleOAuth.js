@@ -26,13 +26,10 @@ const authorize = async () => {
 	}
 
 	return oAuth2Client;
-	// fs.readFile(TOKEN_PATH, (err, token) => {
-	// 	if (err) return getNewToken(oAuth2Client);
-	// 	oAuth2Client.setCredentials(JSON.parse(token));
-	// 	return oAuth2Client;
-	// });
+
 };
 
+//TODO : promisify the functions in here
 const getNewToken = async (oAuth2Client) => {
 	const authUrl = oAuth2Client.generateAuthUrl({
 		access_type: "offline",
