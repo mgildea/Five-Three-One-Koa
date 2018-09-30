@@ -10,7 +10,7 @@ const MovementSet = (mvmt, outline) => {
 };
 
 
-const buildProgramTemplate = (daysPerWeek = 4, movements = ["Back Squat", "Strict Press", "Front Squat", "Deadlift", "Overhead Squat", "Push Press"]) => {
+const ProgramTemplate = (daysPerWeek = 4, movements = ["Back Squat", "Strict Press", "Front Squat", "Deadlift", "Overhead Squat", "Push Press"]) => {
 	const outline = [
 		[SetOutline(0.58, 5), SetOutline(0.67, 5), SetOutline(0.76, 5)],
 		[SetOutline(0.63, 3), SetOutline(0.72, 3), SetOutline(0.81, 3)],
@@ -54,4 +54,5 @@ const buildProgramTemplate = (daysPerWeek = 4, movements = ["Back Squat", "Stric
 	return program;
 };
 
-module.exports = buildProgramTemplate;
+//export default ProgramTemplate
+module.exports = ProgramTemplate;

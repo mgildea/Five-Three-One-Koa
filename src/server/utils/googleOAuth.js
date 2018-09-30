@@ -1,12 +1,12 @@
-const { google } = require("googleapis");
-const fs = require("fs");
-const readline = require("readline");
+const { google } = require('googleapis');
+const fs = require('fs');
+const readline = require('readline');
+const { promisify } = require('util');
 
 const credentials = require("../credentials.json");
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const TOKEN_PATH = "token.json";
 
-const { promisify } = require("util");
 const readfile = promisify(fs.readFile);
 
 const authorize = async () => {
