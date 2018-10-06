@@ -1,11 +1,10 @@
-const { google } = require('googleapis');
-const authorize = require('./googleOAuth');
-const { promisify } = require('util');
+const { google } = require("googleapis");
+const authorize = require("./googleOAuth");
+const { promisify } = require("util");
 
 const sheets = google.sheets("v4");
 
-const ONE_REP_MAX_REP_MULTIPLIER = .0333;
-
+const ONE_REP_MAX_REP_MULTIPLIER = 0.0333;
 
 sheets.spreadsheets.create[promisify.custom] = (request) => {
 	return new Promise((resolve, reject) => {
@@ -17,23 +16,33 @@ sheets.spreadsheets.create[promisify.custom] = (request) => {
 };
 const publish = promisify(sheets.spreadsheets.create);
 
+sheets.spreadsheets.batchUpdate[promisify.custom] = (request) => {
+	return new Promise((resolve, reject) => {
+		sheets.spreadsheets.batchUpdate(request, (err, response) => {
+			if (err) return reject(err);
+			return resolve(response);
+		});
+	});
+};
+const update = promisify(sheets.spreadsheets.batchUpdate);
+
 const NamedRanges = {};
 const CalculatedFormulaRanges = {};
 
 //common border format
-const Border = () => ({
-	style: "SOLID",
+const Border = (style = "SOLID") => ({
+	style: style,
 	color: {
 		alpha: 1
 	}
 });
 
 //build cell border formats
-const Borders = ({ top, bottom, left, right }) => ({
-	...(top && { top: Border() }),
-	...(bottom && { bottom: Border() }),
-	...(left && { left: Border() }),
-	...(right && { right: Border() })
+const Borders = ({ top, bottom, left, right }, style = "SOLID") => ({
+	...(top && { top: Border(style) }),
+	...(bottom && { bottom: Border(style) }),
+	...(left && { left: Border(style) }),
+	...(right && { right: Border(style) })
 });
 
 const SetHeaders = (day, i) => [
@@ -45,18 +54,8 @@ const SetHeaders = (day, i) => [
 				},
 				userEnteredFormat: {
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.72,
-						green: 0.72,
-						blue: 0.72,
-						alpha: 1
-					},
-					borders: Borders({
-						top: true,
-						bottom: true,
-						left: true,
-						right: true
-					})
+					backgroundColor: { red: 0.72, green: 0.72, blue: 0.72, alpha: 1 },
+					borders: Borders({ top: true, bottom: true, left: true, right: true })
 				}
 			}
 		]
@@ -69,12 +68,7 @@ const SetHeaders = (day, i) => [
 				},
 				userEnteredFormat: {
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.8,
-						green: 0.8,
-						blue: 0.8,
-						alpha: 1
-					},
+					backgroundColor: { red: 0.8, green: 0.8, blue: 0.8, alpha: 1 },
 					borders: Borders({ bottom: true, left: true })
 				}
 			},
@@ -88,12 +82,7 @@ const SetHeaders = (day, i) => [
 						bold: true
 					},
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.8,
-						green: 0.8,
-						blue: 0.8,
-						alpha: 1
-					},
+					backgroundColor: { red: 0.8, green: 0.8, blue: 0.8, alpha: 1 },
 					borders: Borders({ bottom: true, right: true })
 				}
 			}
@@ -107,12 +96,7 @@ const SetHeaders = (day, i) => [
 				},
 				userEnteredFormat: {
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.93,
-						green: 0.93,
-						blue: 0.93,
-						alpha: 1
-					},
+					backgroundColor: { red: 0.93, green: 0.93, blue: 0.93, alpha: 1 },
 					borders: Borders({ bottom: true, left: true })
 				}
 			},
@@ -122,12 +106,7 @@ const SetHeaders = (day, i) => [
 				},
 				userEnteredFormat: {
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.93,
-						green: 0.93,
-						blue: 0.93,
-						alpha: 1
-					},
+					backgroundColor: { red: 0.93, green: 0.93, blue: 0.93, alpha: 1 },
 					borders: Borders({ bottom: true })
 				}
 			},
@@ -137,12 +116,7 @@ const SetHeaders = (day, i) => [
 				},
 				userEnteredFormat: {
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.93,
-						green: 0.93,
-						blue: 0.93,
-						alpha: 1
-					},
+					backgroundColor: { red: 0.93, green: 0.93, blue: 0.93, alpha: 1 },
 					borders: Borders({ bottom: true })
 				}
 			},
@@ -152,12 +126,7 @@ const SetHeaders = (day, i) => [
 				},
 				userEnteredFormat: {
 					horizontalAlignment: "CENTER",
-					backgroundColor: {
-						red: 0.93,
-						green: 0.93,
-						blue: 0.93,
-						alpha: 1
-					},
+					backgroundColor: { red: 0.93, green: 0.93, blue: 0.93, alpha: 1 },
 					borders: Borders({ bottom: true, right: true })
 				}
 			}
@@ -184,7 +153,8 @@ const Sets = (sets, day, week) =>
 
 			{
 				userEnteredValue: {
-					formulaValue: `=ROUNDDOWN(INDEX(Maxes,MATCH(Week_${week}_DAY_${day}_MOVEMENT, Movements,0),0) * INDEX(Week_${week}_DAY_${day}_PERCENTAGES,${i+1},1))`
+					formulaValue: `=ROUNDDOWN(INDEX(Maxes,MATCH(Week_${week}_DAY_${day}_MOVEMENT, Movements,0),0) * INDEX(Week_${week}_DAY_${day}_PERCENTAGES,${i +
+						1},1))`
 				},
 
 				userEnteredFormat: {
@@ -214,26 +184,40 @@ const Sets = (sets, day, week) =>
 						type: "NUMBER"
 					},
 					horizontalAlignment: "CENTER",
-					borders: Borders({ bottom: i === sets.length - 1, right: true })
+					borders: Borders(
+						{
+							top: i === 0,
+							bottom: i === sets.length - 1,
+							right: true,
+							left: true
+						},
+						"SOLID_MEDIUM"
+					)
 				}
-            },
-            ...(i === sets.length -1) ? [{
-                userEnteredValue: {
-					formulaValue: `=IF(ISBLANK(INDEX(Week_${week}_DAY_${day}_COMPLETED_REPS,${i+1},1)), 0, ROUNDDOWN((INDEX(Week_${week}_DAY_${day}_WEIGHT,${i+1},1) * INDEX(Week_${week}_DAY_${day}_COMPLETED_REPS,${i+1},1) * ${ONE_REP_MAX_REP_MULTIPLIER}) + INDEX(Week_${week}_DAY_${day}_WEIGHT, ${i+1}, 1)))`
-                },
-                userEnteredFormat: {
-					textFormat : {
-                        foregroundColor : {
-                            red : 1,
-                            green : 1,
-                            blue : 1,
-                            alpha : 0
-                        }
-                    }
-				
-				}
-              
-            }] : []
+			},
+			...(i === sets.length - 1
+				? [
+						{
+							userEnteredValue: {
+								formulaValue: `=IF(ISBLANK(INDEX(Week_${week}_DAY_${day}_COMPLETED_REPS,${i +
+									1},1)), 0, ROUNDDOWN((INDEX(Week_${week}_DAY_${day}_WEIGHT,${i +
+									1},1) * INDEX(Week_${week}_DAY_${day}_COMPLETED_REPS,${i +
+									1},1) * ${ONE_REP_MAX_REP_MULTIPLIER}) + INDEX(Week_${week}_DAY_${day}_WEIGHT, ${i +
+									1}, 1)))`
+							},
+							userEnteredFormat: {
+								textFormat: {
+									foregroundColor: {
+										red: 1,
+										green: 1,
+										blue: 1,
+										alpha: 0
+									}
+								}
+							}
+						}
+				  ]
+				: [])
 		]
 	}));
 
@@ -293,7 +277,7 @@ const ConditionalFormats = (week, sheetId) => {
 						values: [
 							{
 								userEnteredValue: `=INDEX(${week_day}_TARGET_REPS,${j + 1},1)`
-								// "=INDEX(" + week_day + "_TARGET_REPS," + (j + 1) + ",1)"
+								
 							}
 						]
 					},
@@ -323,16 +307,8 @@ const Weeks = (weeks) =>
 		},
 
 		data: Days(week.days, i + 1),
-		merges: SheetMerges(week.days, i + 1),
-		protectedRanges: [
-			{
-				range: {
-					sheetId: i + 1
-				}
-			}
-		]
-		//conditionalFormats: ConditionalFormats(week, i + 1)
-		//protectedRanges : ProtectedRanges(week.days, i+1)
+		merges: SheetMerges(week.days, i + 1)
+
 	}));
 
 const MaxesHeaders = () => [
@@ -354,12 +330,17 @@ const MaxesHeaders = () => [
 								blue: 0.8,
 								alpha: 1
 							},
-							borders: Borders(true, true, true, false)
+							borders: Borders({
+								top: true,
+								bottom: true,
+								left: true,
+								right: true
+							})
 						}
 					},
 					{
 						userEnteredValue: {
-							stringValue: "1 Rep Max"
+							stringValue: "Working 1 Rep Max"
 						},
 						userEnteredFormat: {
 							horizontalAlignment: "CENTER",
@@ -369,7 +350,7 @@ const MaxesHeaders = () => [
 								blue: 0.8,
 								alpha: 1
 							},
-							borders: Borders(true, true, false, false)
+							borders: Borders({ top: true, bottom: true })
 						}
 					},
 					{
@@ -384,7 +365,7 @@ const MaxesHeaders = () => [
 								blue: 0.8,
 								alpha: 1
 							},
-							borders: Borders(true, true, false, true)
+							borders: Borders({ top: true, bottom: true, right: true })
 						}
 					}
 				]
@@ -393,11 +374,7 @@ const MaxesHeaders = () => [
 	}
 ];
 
-
-
-
 const OneRepMaxes = (movements) =>
-    
 	MaxesHeaders().concat(
 		movements.map((movement, i) => ({
 			startRow: i + 2,
@@ -410,7 +387,10 @@ const OneRepMaxes = (movements) =>
 								stringValue: movement
 							},
 							userEnteredFormat: {
-								borders: Borders(false, i === movements.length - 1, true, false)
+								borders: Borders({
+									bottom: i === movements.length - 1,
+									left: true
+								})
 							}
 						},
 						{
@@ -420,28 +400,34 @@ const OneRepMaxes = (movements) =>
 							userEnteredFormat: {
 								horizontalAlignment: "CENTER",
 								borders: Borders(
-									false,
-									i === movements.length - 1,
-									false,
-									false
-                                ),
-                                numberFormat: {
-                                    type: "NUMBER",
-                                    pattern: "##"
-                                }
+									{
+										top: i == 0,
+										bottom: i === movements.length - 1,
+										left: true,
+										right: true
+									},
+									"SOLID_MEDIUM"
+								),
+								numberFormat: {
+									type: "NUMBER",
+									pattern: "##"
+								}
 							}
 						},
 						{
-                            userEnteredValue : {
-                                formulaValue : `=MAX(${CalculatedFormulaRanges[movement]})`
-                            },
+							userEnteredValue: {
+								formulaValue: `=MAX(${CalculatedFormulaRanges[movement]})`
+							},
 							userEnteredFormat: {
 								horizontalAlignment: "CENTER",
-                                borders: Borders(false, i === movements.length - 1, false, true),
-                                numberFormat: {
-                                    type: "NUMBER",
-                                    pattern: "##"
-                                }
+								borders: Borders({
+									bottom: i === movements.length - 1,
+									right: true
+								}),
+								numberFormat: {
+									type: "NUMBER",
+									pattern: "##"
+								}
 							}
 						}
 					]
@@ -459,18 +445,7 @@ const Maxes = (movements) => ({
 		}
 	},
 	data: OneRepMaxes(movements)
-	// protectedRanges : [{
-	//     range : {
-	//         sheetId : 0
-	//     }
-	//     // warningOnly : true,
-	//     // unprotectedRanges : [NamedRanges["Maxes"].range]
-	// }]
 });
-
-// const MaxesRanges = (movements) => {
-// 	return [Ranges["Movements"], Ranges["Maxes"]];
-// };
 
 const AddNamedRange = (key, range) => {
 	NamedRanges[key] = {
@@ -487,11 +462,11 @@ const GenerateNamedRanges = (template) => {
 		endRowIndex: template.movements.length + 2,
 		startColumnIndex: 0,
 		endColumnIndex: 1
-    });
-    
-    template.movements.forEach(movement => {
-        CalculatedFormulaRanges[movement] = [];
-    })
+	});
+
+	template.movements.forEach((movement) => {
+		CalculatedFormulaRanges[movement] = [];
+	});
 
 	AddNamedRange("Maxes", {
 		sheetId: 0,
@@ -520,8 +495,7 @@ const GenerateNamedRanges = (template) => {
 				endRowIndex: startRow + 3 + day.sets.length,
 				startColumnIndex: 0,
 				endColumnIndex: 1
-            });
-            
+			});
 
 			AddNamedRange(`${week_day}_WEIGHT`, {
 				sheetId: i + 1,
@@ -545,49 +519,99 @@ const GenerateNamedRanges = (template) => {
 				endRowIndex: startRow + 3 + day.sets.length,
 				startColumnIndex: 3,
 				endColumnIndex: 4
-            });
-            
+			});
 
-            let formulaNamedRange = `${week_day}_CALCULATED_MAX`;
-            CalculatedFormulaRanges[day.movement].push(formulaNamedRange);
+			let formulaNamedRange = `${week_day}_CALCULATED_MAX`;
+			CalculatedFormulaRanges[day.movement].push(formulaNamedRange);
 
-            AddNamedRange(formulaNamedRange, {
-                sheetId: i + 1,
-				startRowIndex: startRow + 3 + day.sets.length-1,
+			AddNamedRange(formulaNamedRange, {
+				sheetId: i + 1,
+				startRowIndex: startRow + 3 + day.sets.length - 1,
 				endRowIndex: startRow + 3 + day.sets.length,
 				startColumnIndex: 4,
 				endColumnIndex: 5
-            })
+			});
 		});
 	});
 };
 
+//protected and auto-sized functions must be requested after sheet has been created
+const ProtectAndFormatRequests = (template) => {
+	let requests = [{
+		addProtectedRange : {
+			protectedRange : {
+				range : {
+					sheetId : 0
+				},
+				warningOnly : true,
+				unprotectedRanges : NamedRanges["Maxes"]["range"]
+			}
+		}
+	}];
+
+	template.weeks.forEach((week, i) => {
+		requests.push({
+			autoResizeDimensions: {
+				dimensions: {
+					sheetId: i,
+					dimension: "COLUMNS"
+				}
+			}
+		});
+
+		requests.push({
+			addProtectedRange: {
+				protectedRange: {
+					range: {
+						sheetId: i + 1
+					},
+					warningOnly : true,
+					unprotectedRanges: Object.values(NamedRanges)
+						.filter(
+							(range) =>
+								range.namedRangeId.startsWith(`Week_${i + 1}_`) &&
+								range.namedRangeId.endsWith("_COMPLETED_REPS")
+						)
+						.map((namedRange) => namedRange["range"])
+				}
+			}
+		});
+	});
+
+	return requests;
+}
+
 const SpreadSheet = async (template) => {
 	let authClient = await authorize();
 
-    GenerateNamedRanges(template);
-
-	let request = {
-		resource: {
-			properties: {
-				title: "My 5-3-1 Program"
-			},
-			sheets: [Maxes(template.movements)].concat(Weeks(template.weeks)),
-			namedRanges: Object.values(NamedRanges)
-			// namedRanges: MaxesRanges(template.movements).concat(
-			// 	WeeksRanges(template.weeks)
-			// )
-		},
-		auth: authClient
-	};
+	GenerateNamedRanges(template);
 
 	let response;
 	try {
-		response = await publish(request);
+		response = await publish({
+			resource: {
+				properties: {
+					title: "My 5-3-1 Program"
+				},
+				sheets: [Maxes(template.movements)].concat(Weeks(template.weeks)),
+				namedRanges: Object.values(NamedRanges)
+			},
+			auth: authClient
+		});
+
+		update({
+			spreadsheetId: response.data.spreadsheetId,
+			resource: {
+				requests: ProtectAndFormatRequests(template)
+			},
+	
+			auth: authClient
+		});
 	} catch (err) {
 		console.log(err);
 		return err.message;
 	}
+
 
 	return {
 		spreadsheetUrl: response.data.spreadsheetUrl,
@@ -595,5 +619,4 @@ const SpreadSheet = async (template) => {
 	};
 };
 
-//export default SpreadSheet;
 module.exports = SpreadSheet;
