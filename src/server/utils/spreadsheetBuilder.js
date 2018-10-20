@@ -26,7 +26,6 @@ sheets.spreadsheets.batchUpdate[promisify.custom] = (request) => {
 };
 const update = promisify(sheets.spreadsheets.batchUpdate);
 
-const NamedRanges = {};
 const CalculatedFormulaRanges = {};
 
 //common border format
@@ -92,6 +91,20 @@ const SetHeaders = (day, i) => [
 		values: [
 			{
 				userEnteredValue: {
+					stringValue: "WARMUP"
+				},
+				userEnteredFormat: {
+					horizontalAlignment: "CENTER",
+					//backgroundColor: { red: 0.93, green: 0.93, blue: 0.93, alpha: 1 },
+					borders: Borders({ bottom: true, right: true })
+				}
+			}
+		]
+	},
+	{
+		values: [
+			{
+				userEnteredValue: {
 					stringValue: "Percent"
 				},
 				userEnteredFormat: {
@@ -133,6 +146,8 @@ const SetHeaders = (day, i) => [
 		]
 	}
 ];
+
+const numSetHeaders = SetHeaders({ movement: "TEMPLATE" }, 0).length;
 
 const Sets = (sets, day, week) =>
 	sets.map((set, i) => ({
@@ -224,7 +239,7 @@ const Sets = (sets, day, week) =>
 const DayStartRow = (i, days) => {
 	let startRow = 2;
 	for (let j = 0; j < i; j++) {
-		startRow += 3 + days[j].sets.length + 2;
+		startRow += numSetHeaders + days[j].sets.length + 2;
 	}
 
 	return startRow;
@@ -250,6 +265,14 @@ const SheetMerges = (days, sheetId) => {
 			startColumnIndex: 1,
 			endColumnIndex: 4
 		});
+
+		arr.push({
+			sheetId: sheetId,
+			startRowIndex: startRow + 2,
+			endRowIndex: startRow + 3,
+			startColumnIndex: 0,
+			endColumnIndex: 4
+		});
 	});
 
 	return arr;
@@ -262,54 +285,97 @@ const Days = (days, week) =>
 		rowData: SetHeaders(day, i).concat(Sets(day.sets, i + 1, week))
 	}));
 
-const ConditionalFormats = (week, sheetId) => {
-	let arr = [];
+// const ConditionalFormats = (week, sheetId) => {
+// 	let arr = [];
 
-	week.days.forEach((day, i) => {
-		day.sets.forEach((set, j) => {
-			let week_day = "Week_" + (i + 1) + "_DAY_" + (j + 1);
+// 	week.days.forEach((day, i) => {
+// 		day.sets.forEach((set, j) => {
+// 			let week_day = "Week_" + (i + 1) + "_DAY_" + (j + 1);
 
-			arr.push({
-				ranges: [NamedRanges[`${week_day}_COMPLETED_REPS`].range],
-				booleanRule: {
-					condition: {
-						type: "NUMBER_GREATER_THAN_EQ",
-						values: [
-							{
-								userEnteredValue: `=INDEX(${week_day}_TARGET_REPS,${j + 1},1)`
-								
-							}
-						]
-					},
-					format: {
-						textFormat: {
-							foregroundColor: {
-								green: 1
-							}
-						}
-					}
-				}
-			});
-		});
+// 			arr.push({
+// 				ranges: [NamedRanges[`${week_day}_COMPLETED_REPS`].range],
+// 				booleanRule: {
+// 					condition: {
+// 						type: "NUMBER_GREATER_THAN_EQ",
+// 						values: [
+// 							{
+// 								userEnteredValue: `=INDEX(${week_day}_TARGET_REPS,${j + 1},1)`
+
+// 							}
+// 						]
+// 					},
+// 					format: {
+// 						textFormat: {
+// 							foregroundColor: {
+// 								green: 1
+// 							}
+// 						}
+// 					}
+// 				}
+// 			});
+// 		});
+// 	});
+
+// 	return arr;
+// };
+
+const ConditionalFormats = (week, i) => {
+	week.days.forEach((day, j) => {
+		day.sets.forEach((set, k) => {});
 	});
-
-	return arr;
 };
 
-const Weeks = (weeks) =>
-	weeks.map((week, i) => ({
-		properties: {
-			sheetId: i + 1,
-			title: `Week ${i + 1}`,
-			tabColor: {
-				red: 1.0
-			}
-		},
+const Sheets = (template) => {
+	return [Maxes(template.movements)].concat(
+		template.weeks.map((week, i) => {
+			let sheet = {
+				properties: {
+					sheetId: i + 1,
+					title: `Week ${i + 1}`,
+					tabColor: {
+						red: 1.0
+					}
+				},
+				data: Days(week.days, i + 1),
+				merges: SheetMerges(week.days, i + 1),
+				conditionalFormats: []
+			};
 
-		data: Days(week.days, i + 1),
-		merges: SheetMerges(week.days, i + 1)
+			//ConditionalFormats(sheet)
+			return sheet;
+		})
+	);
+};
+// weeks.map((week, i) => {
+// 	let sheet = {
+// 		properties: {
+// 			sheetId: i + 1,
+// 			title: `Week ${i + 1}`,
+// 			tabColor: {
+// 				red: 1.0
+// 			}
+// 		},
+// 		data: Days(week.days, i + 1),
+// 		merges: SheetMerges(week.days, i + 1),
+// 		conditionalFormats: ConditionalFormats(week)
+// 	};
 
-	}));
+// 	return sheet;
+// });
+
+// ({
+// 	properties: {
+// 		sheetId: i + 1,
+// 		title: `Week ${i + 1}`,
+// 		tabColor: {
+// 			red: 1.0
+// 		}
+// 	},
+
+// 	data: Days(week.days, i + 1),
+// 	merges: SheetMerges(week.days, i + 1),
+// 	conditionalFormats: ConditionalFormats(week)
+// }));
 
 const MaxesHeaders = () => [
 	{
@@ -350,7 +416,7 @@ const MaxesHeaders = () => [
 								blue: 0.8,
 								alpha: 1
 							},
-							borders: Borders({ top: true, bottom: true })
+							borders: Borders({ top: true, bottom: true, right: true })
 						}
 					},
 					{
@@ -448,11 +514,11 @@ const Maxes = (movements) => ({
 });
 
 const AddNamedRange = (key, range) => {
-	NamedRanges[key] = {
+	request.resource.namedRanges.push({
 		namedRangeId: key,
 		name: key,
 		range: range
-	};
+	});
 };
 
 const GenerateNamedRanges = (template) => {
@@ -491,69 +557,104 @@ const GenerateNamedRanges = (template) => {
 
 			AddNamedRange(`${week_day}_PERCENTAGES`, {
 				sheetId: i + 1,
-				startRowIndex: startRow + 3,
-				endRowIndex: startRow + 3 + day.sets.length,
+				startRowIndex: startRow + numSetHeaders,
+				endRowIndex: startRow + numSetHeaders + day.sets.length,
 				startColumnIndex: 0,
 				endColumnIndex: 1
 			});
 
 			AddNamedRange(`${week_day}_WEIGHT`, {
 				sheetId: i + 1,
-				startRowIndex: startRow + 3,
-				endRowIndex: startRow + 3 + day.sets.length,
+				startRowIndex: startRow + numSetHeaders,
+				endRowIndex: startRow + numSetHeaders + day.sets.length,
 				startColumnIndex: 1,
 				endColumnIndex: 2
 			});
 
 			AddNamedRange(`${week_day}_TARGET_REPS`, {
 				sheetId: i + 1,
-				startRowIndex: startRow + 3,
-				endRowIndex: startRow + 3 + day.sets.length,
+				startRowIndex: startRow + numSetHeaders,
+				endRowIndex: startRow + numSetHeaders + day.sets.length,
 				startColumnIndex: 2,
 				endColumnIndex: 3
 			});
 
 			AddNamedRange(`${week_day}_COMPLETED_REPS`, {
 				sheetId: i + 1,
-				startRowIndex: startRow + 3,
-				endRowIndex: startRow + 3 + day.sets.length,
+				startRowIndex: startRow + numSetHeaders,
+				endRowIndex: startRow + numSetHeaders + day.sets.length,
 				startColumnIndex: 3,
 				endColumnIndex: 4
 			});
 
-			let formulaNamedRange = `${week_day}_CALCULATED_MAX`;
-			CalculatedFormulaRanges[day.movement].push(formulaNamedRange);
+			day.sets.forEach((set, k) => {
+				let week_day_set = `${week_day}_SET_${k + 1}`;
 
-			AddNamedRange(formulaNamedRange, {
-				sheetId: i + 1,
-				startRowIndex: startRow + 3 + day.sets.length - 1,
-				endRowIndex: startRow + 3 + day.sets.length,
-				startColumnIndex: 4,
-				endColumnIndex: 5
+				AddNamedRange(`${week_day_set}_TARGET_REPS`, {
+					sheetId: i + 1,
+					startRowIndex: startRow + numSetHeaders + k,
+					endRowIndex: startRow + numSetHeaders + k + 1,
+					startColumnIndex: 2,
+					endColumnIndex: 3
+				});
+
+				AddNamedRange(`${week_day_set}_COMPLETED_REPS`, {
+					sheetId: i + 1,
+					startRowIndex: startRow + numSetHeaders + k,
+					endRowIndex: startRow + numSetHeaders + k + 1,
+					startColumnIndex: 3,
+					endColumnIndex: 4
+				});
 			});
+
+			//only calculate 1 rep max if last set is a 1++
+			if (day.sets[day.sets.length - 1].reps === 1) {
+				let formulaNamedRange = `${week_day}_CALCULATED_MAX`;
+				CalculatedFormulaRanges[day.movement].push(formulaNamedRange);
+
+				AddNamedRange(formulaNamedRange, {
+					sheetId: i + 1,
+					startRowIndex: startRow + numSetHeaders + day.sets.length - 1,
+					endRowIndex: startRow + numSetHeaders + day.sets.length,
+					startColumnIndex: 4,
+					endColumnIndex: 5
+				});
+			}
 		});
 	});
 };
 
 //protected and auto-sized functions must be requested after sheet has been created
 const ProtectAndFormatRequests = (template) => {
-	let requests = [{
-		addProtectedRange : {
-			protectedRange : {
-				range : {
-					sheetId : 0
-				},
-				warningOnly : true,
-				unprotectedRanges : NamedRanges["Maxes"]["range"]
+	let requests = [
+		{
+			addProtectedRange: {
+				protectedRange: {
+					range: {
+						sheetId: 0
+					},
+					warningOnly: true,
+					unprotectedRanges: request.resource.namedRanges
+						.filter((nr) => nr.name === "Maxes")
+						.map((nr) => nr.range)
+				}
+			}
+		},
+		{
+			autoResizeDimensions: {
+				dimensions: {
+					sheetId: 0,
+					dimension: "COLUMNS"
+				}
 			}
 		}
-	}];
+	];
 
 	template.weeks.forEach((week, i) => {
 		requests.push({
 			autoResizeDimensions: {
 				dimensions: {
-					sheetId: i,
+					sheetId: i + 1,
 					dimension: "COLUMNS"
 				}
 			}
@@ -565,53 +666,72 @@ const ProtectAndFormatRequests = (template) => {
 					range: {
 						sheetId: i + 1
 					},
-					warningOnly : true,
-					unprotectedRanges: Object.values(NamedRanges)
+					warningOnly: true,
+					unprotectedRanges: request.resource.namedRanges
 						.filter(
-							(range) =>
-								range.namedRangeId.startsWith(`Week_${i + 1}_`) &&
-								range.namedRangeId.endsWith("_COMPLETED_REPS")
+							(nr) =>
+								nr.name.startsWith(`Week_${i + 1}_`) &&
+								nr.name.endsWith("_COMPLETED_REPS")
 						)
-						.map((namedRange) => namedRange["range"])
+						.map((nr) => nr.range)
 				}
 			}
 		});
 	});
 
 	return requests;
-}
+};
 
-const SpreadSheet = async (template) => {
+const request = {
+	resource: {
+		properties: {},
+		sheets: [],
+		namedRanges: []
+	}
+};
+
+const SpreadSheet = async (template, name="My 5-3-1 Program") => {
+
 	let authClient = await authorize();
 
 	GenerateNamedRanges(template);
 
+	request.resource.properties.title = name;
+	request.resource.sheets = Sheets(template);
+
+	// request.resource.sheets.push(
+	// 	[Maxes(template.movements)].concat(Weeks(template.weeks))
+	// );
+	//request.resource.namedRanges.push(Object.values(NamedRanges));
+
 	let response;
-	try {
-		response = await publish({
-			resource: {
-				properties: {
-					title: "My 5-3-1 Program"
-				},
-				sheets: [Maxes(template.movements)].concat(Weeks(template.weeks)),
-				namedRanges: Object.values(NamedRanges)
-			},
-			auth: authClient
-		});
+	// try {
+		request.auth = authClient;
+		response = await publish(request);
+
+		// response = await publish({
+		// 	resource: {
+		// 		properties: {
+		// 			title: "My 5-3-1 Program"
+		// 		},
+		// 		sheets: [Maxes(template.movements)].concat(Weeks(template.weeks)),
+		// 		namedRanges: Object.values(NamedRanges)
+		// 	},
+		// 	auth: authClient
+		// });
 
 		update({
 			spreadsheetId: response.data.spreadsheetId,
 			resource: {
 				requests: ProtectAndFormatRequests(template)
 			},
-	
+
 			auth: authClient
 		});
-	} catch (err) {
-		console.log(err);
-		return err.message;
-	}
-
+	// } catch (err) {
+	// 	console.log(err);
+	// 	throw err;
+	// }
 
 	return {
 		spreadsheetUrl: response.data.spreadsheetUrl,

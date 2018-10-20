@@ -5,25 +5,17 @@ const SpreadSheet = require('../utils/spreadsheetBuilder');
 
 const router = new Router();
 
-router.get('/', async (ctx) => {
-    ctx.body = "test";
-    ctx.status = 200;
-});
-
 router
-.param('days', (id, ctx, next) => {
-    ctx.days = parseInt(id) || 4;
-    return next();
-})
-.get('/template/:days', async (ctx) => {
+    .get('/template', async (ctx) => {
 
-    ctx.body = template(ctx.days)
-    ctx.status = 200;
-})
-.post('/program/:days', async (ctx) => {
+        ctx.body = ProgramTemplate(ctx.request.body.daysPerWeek, ctx.request.body.movements)
+        ctx.status = 200;
+    })
+    .post('/program', async (ctx) => {
 
-    ctx.body = await SpreadSheet(ProgramTemplate(ctx.days));
-    ctx.status = 200;
-})
+        const {daysPerWeek, movements, name} = ctx.request.body;
+        ctx.body = await SpreadSheet(ProgramTemplate(daysPerWeek, movements), name);
+        ctx.status = 200;
+    })
 
 module.exports = router;

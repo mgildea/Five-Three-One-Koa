@@ -7,7 +7,9 @@ const programRoutes = require("./routes/program");
 const app = new Koa();
 const PORT = 1337;
 
-app.use(cors());
+app.use(cors({
+  origin : process.env.REACT_APP_URL || "http://localhost:3000"
+}));
 
 
 app.use(bodyParser());
