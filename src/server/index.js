@@ -1,21 +1,21 @@
-const Koa = require("koa");
-const bodyParser = require("koa-bodyparser");
-const cors = require("@koa/cors");
-
-const programRoutes = require("./routes/program");
+import Koa from "koa";
+import koaBody from "koa-body";
+import cors from "@koa/cors";
+import programRoutes from "./routes/program";
 
 const app = new Koa();
-const PORT = 1337;
 
-app.use(cors({
-  origin : process.env.REACT_APP_URL || "http://localhost:3000"
-}));
+const PORT = process.env.PORT || 1337;
 
+app.use(
+  cors({
+    origin: process.env.REACT_APP_URL || "http://localhost:3000"
+  })
+);
 
-app.use(bodyParser());
+app.use(koaBody({ multipart: true }));
 
 app.use(programRoutes.routes());
-
 
 const server = app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}`);
